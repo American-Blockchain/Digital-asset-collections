@@ -18,7 +18,7 @@ resource "aws_vpc" "base_vpc" {
 resource "aws_subnet" "base_subnet_01" {
   vpc_id     = aws_vpc.base_vpc.id
   cidr_block = "10.0.0.0/24" 
-  availability_zone = "us-east-1" 
+  availability_zone = "us-east-1a" 
   tags = {
     Name = "base_subnet_01"
   } 
