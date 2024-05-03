@@ -6,7 +6,7 @@ on:
 
 jobs:
   deploy-infrastructure:
-    runs-on: ubuntu-latest
+    runs-on: localbank
     environment: production 
 
     steps:
