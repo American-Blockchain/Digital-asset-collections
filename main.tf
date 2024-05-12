@@ -63,6 +63,42 @@ locals {
 
   vpc_cidr = "10.0.0.0/16"
   azs      = slice(data.aws_availability_zones.available.names, 0, 3)
+  
+  gitops_addons_url      = "${var.gitops_addons_org}/${var.gitops_addons_repo}"
+  gitops_addons_basepath = var.gitops_addons_basepath
+  gitops_addons_path     = var.gitops_addons_path
+  gitops_addons_revision = var.gitops_addons_revision
+
+  gitops_workload_url      = "${var.gitops_workload_org}/${var.gitops_workload_repo}"
+  gitops_workload_basepath = var.gitops_workload_basepath
+  gitops_workload_path     = var.gitops_workload_path
+  gitops_workload_revision = var.gitops_workload_revision
+
+
+  addons_metadata = merge(
+    module.eks_blueprints_addons.gitops_metadata,
+    {
+      aws_cluster_name = module.eks.cluster_name
+      aws_region       = local.region
+      aws_account_id   = data.aws_caller_identity.current.account_id
+      aws_vpc_id       = module.vpc.vpc_id
+    },
+    {
+      addons_repo_url      = local.gitops_addons_url
+      addons_repo_basepath = local.gitops_addons_basepath
+      addons_repo_path     = local.gitops_addons_path
+      addons_repo_revision = local.gitops_addons_revision
+    },
+    {
+      workload_repo_url      = local.gitops_workload_url
+      workload_repo_basepath = local.gitops_workload_basepath
+      workload_repo_path     = local.gitops_workload_path
+      workload_repo_revision = local.gitops_workload_revision
+    }
+  )
+
+
+
 
   tags = {
     Blueprint  = local.name
@@ -146,6 +182,18 @@ eks_addons = {
     }
   }
 
+
+################################################################################
+# GitOps Bridge: Bootstrap
+################################################################################
+module "gitops_bridge_bootstrap" {
+  source = "github.com/gitops-bridge-dev/gitops-bridge-argocd-bootstrap-terraform?ref=v2.0.0"
+
+  cluster = {
+    metadata = local.addons_metadata
+    addons   = local.addons
+  }
+}
 
 ################################################################################
 # Supporting Resources
